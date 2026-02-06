@@ -1,213 +1,116 @@
--- 🌊 Tsunami Hub v2 MOBILE FIX | Founder Scripts 🌊
--- 📱 100% Mobile Compatible | Delta Executor
--- 🔗 Telegram: @FounderScripts
+-- 🌊 Tsunami Mobile Script | Только для телефона
+-- Работает на Delta Executor Mobile
 
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VirtualInputManager = game:GetService("VirtualInputManager")
 
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local rootPart = character:WaitForChild("HumanoidRootPart")
 
--- Ждем загрузки персонажа
-repeat wait() until LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+-- Простая кнопка запуска (внизу экрана)
+local gui = Instance.new("ScreenGui")
+gui.Parent = player:WaitForChild("PlayerGui")
+gui.IgnoreGuiInset = true
 
-local Config = {
-    AutoFarm = false,
-    AutoMoney = false,
-    GodMode = true,
-    RemoveWalls = true,
-    AutoTP = false
-}
+local btn = Instance.new("TextButton")
+btn.Size = UDim2.new(0, 100, 0, 100)
+btn.Position = UDim2.new(0.9, 0, 0.8, 0)
+btn.BackgroundColor3 = Color3.new(0, 1, 0.5)
+btn.Text = "ON"
+btn.TextScaled = true
+btn.Font = Enum.Font.SourceSansBold
+btn.TextColor3 = Color3.new(1,1,1)
+btn.Parent = gui
 
--- 🔥 MOBILE GUI (упрощенный для мобильных)
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "TsunamiMobileHub"
-ScreenGui.Parent = PlayerGui
-ScreenGui.ResetOnSpawn = false
-ScreenGui.IgnoreGuiInset = true
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(1,0)
+corner.Parent = btn
 
--- Главная кнопка (внизу экрана)
-local OpenBtn = Instance.new("TextButton")
-OpenBtn.Name = "OpenBtn"
-OpenBtn.Parent = ScreenGui
-OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
-OpenBtn.BorderSizePixel = 0
-OpenBtn.Position = UDim2.new(0.85, 0, 0.85, 0)
-OpenBtn.Size = UDim2.new(0, 80, 0, 80)
-OpenBtn.Font = Enum.Font.GothamBold
-OpenBtn.Text = "🌊"
-OpenBtn.TextColor3 = Color3.new(1,1,1)
-OpenBtn.TextScaled = true
+-- Настройки
+local farmOn = false
+local moneyOn = false
+local godOn = true
+local wallsOn = true
 
-local OpenCorner = Instance.new("UICorner")
-OpenCorner.CornerRadius = UDim.new(1, 0)
-OpenCorner.Parent = OpenBtn
-
--- Основное окно
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-MainFrame.BorderSizePixel = 0
-MainFrame.Position = UDim2.new(0.5, -160, 0.5, -180)
-MainFrame.Size = UDim2.new(0, 320, 0, 360)
-MainFrame.Visible = false
-
-local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 15)
-MainCorner.Parent = MainFrame
-
--- Заголовок
-local Title = Instance.new("TextLabel")
-Title.Parent = MainFrame
-Title.BackgroundTransparency = 1
-Title.Size = UDim2.new(1, 0, 0, 50)
-Title.Font = Enum.Font.GothamBold
-Title.Text = "🌊 TSUNAMI HUB MOBILE"
-Title.TextColor3 = Color3.fromRGB(0, 255, 255)
-Title.TextScaled = true
-
--- Кнопки (крупные для пальцев)
-local function MobileToggle(yPos, text, callback)
-    local btn = Instance.new("TextButton")
-    btn.Parent = MainFrame
-    btn.BackgroundColor3 = Color3.fromRGB(60, 180, 60)
-    btn.BorderSizePixel = 0
-    btn.Position = UDim2.new(0.05, 0, 0, yPos)
-    btn.Size = UDim2.new(0.9, 0, 0, 55)
-    btn.Font = Enum.Font.GothamSemibold
-    btn.Text = "✅ " .. text
-    btn.TextColor3 = Color3.new(1,1,1)
-    btn.TextScaled = true
+btn.MouseButton1Click:Connect(function()
+    farmOn = not farmOn
+    moneyOn = not moneyOn
+    godOn = true
+    wallsOn = true
     
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 10)
-    corner.Parent = btn
-    
-    local toggleState = false
-    btn.MouseButton1Click:Connect(function()
-        toggleState = not toggleState
-        Config[text:lower():gsub(" ", "")] = toggleState
-        btn.BackgroundColor3 = toggleState and Color3.fromRGB(60, 180, 60) or Color3.fromRGB(180, 60, 60)
-        callback()
-    end)
-    
-    return btn
-end
-
--- Создаем кнопки
-MobileToggle(60, "Auto Farm Brainrots", function() end)
-MobileToggle(120, "Auto Collect Money", function() end)
-MobileToggle(180, "God Mode Waves", function() end)
-MobileToggle(240, "Remove VIP Walls", function() end)
-MobileToggle(300, "Fast TP Farm", function() end)
-
--- Кнопка закрытия
-local CloseBtn = Instance.new("TextButton")
-CloseBtn.Parent = MainFrame
-CloseBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
-CloseBtn.Position = UDim2.new(1, -50, 0, 10)
-CloseBtn.Size = UDim2.new(0, 40, 0, 40)
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.Text = "✕"
-CloseBtn.TextColor3 = Color3.new(1,1,1)
-CloseBtn.TextScaled = true
-
-local CloseCorner = Instance.new("UICorner")
-CloseCorner.CornerRadius = UDim.new(1, 0)
-CloseCorner.Parent = CloseBtn
-
--- Открытие/закрытие
-local guiVisible = false
-OpenBtn.MouseButton1Click:Connect(function()
-    guiVisible = not guiVisible
-    MainFrame.Visible = guiVisible
+    btn.Text = farmOn and "FARM ON" or "FARM OFF"
+    btn.BackgroundColor3 = farmOn and Color3.new(0,1,0) or Color3.new(1,0.3,0.3)
 end)
 
-CloseBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = false
-    guiVisible = false
-end)
-
--- 🔥 МОБИЛЬНЫЕ ФУНКЦИИ (работают на 100%)
-
--- Удаление VIP стен (работает везде)
+-- УДАЛЕНИЕ VIP СТЕН (ВСЕГДА РАБОТАЕТ)
 spawn(function()
     while true do
-        if Config.removewalls then
-            for _, obj in pairs(Workspace:GetDescendants()) do
-                if obj:IsA("BasePart") and (obj.Name:lower():find("vip") or obj.Name:lower():find("wall") or obj.Parent.Name:lower():find("vip")) then
-                    obj.CanCollide = false
-                    obj.Transparency = 1
+        for _, part in pairs(Workspace:GetDescendants()) do
+            if part:IsA("BasePart") then
+                local name = part.Name:lower()
+                if name:find("vip") or name:find("wall") or name:find("barrier") then
+                    part.CanCollide = false
+                    part.Transparency = 1
                 end
             end
         end
-        wait(1)
+        wait(2)
     end
 end)
 
--- Бессмертие (анти-волны)
+-- БЕССМЕРТИЕ (ВСЕГДА ВКЛ)
 spawn(function()
     while true do
-        if Config.godmodewaves and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.Health = 100
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.Health = 100
         end
-        wait(0.1)
+        wait(0.2)
     end
 end)
 
--- 🔥 АВТОФАРМ БРЕЙНРОТОВ (МОБИЛЬНЫЙ)
+-- АВТОФАРМ (ОЧЕНЬ ПРОСТОЙ)
 spawn(function()
     while true do
-        if Config.autofarmbrainrots or Config.fasttpfarm then
+        if farmOn then
             pcall(function()
-                local char = LocalPlayer.Character
-                if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+                local char = player.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
                 
-                -- Поиск всех коллектаблов
-                for _, obj in pairs(Workspace:GetChildren()) do
-                    if obj.Name:lower():find("brain") or obj.Name:lower():find("collect") or obj:FindFirstChildOfClass("ClickDetector") then
+                    -- Ищем всё что можно собрать
+                    for _, obj in pairs(Workspace:GetChildren()) do
                         local dist = (char.HumanoidRootPart.Position - obj.Position).Magnitude
-                        if dist < 200 then
-                            -- Быстрое ТП
-                            char.HumanoidRootPart.CFrame = obj.CFrame + Vector3.new(0, 5, 0)
-                            wait(0.05)
-                            
-                            -- Сбор (работает на мобильных)
+                        if dist < 100 and (obj.Name:lower():find("brain") or obj.Name:lower():find("collect") or obj:FindFirstChild("ClickDetector")) then
+                            -- ТП и сбор
+                            char.HumanoidRootPart.CFrame = obj.CFrame + Vector3.new(0,10,0)
+                            wait()
                             if obj:FindFirstChildOfClass("ClickDetector") then
                                 fireclickdetector(obj:FindFirstChildOfClass("ClickDetector"))
                             end
-                            
-                            -- Симуляция касания
-                            obj:FindFirstChild("Touched"):Fire(char.HumanoidRootPart)
                         end
                     end
                 end
             end)
         end
-        wait(0.03) -- Очень быстро
+        wait(0.05)
     end
 end)
 
--- Авто деньги
+-- АВТО ДЕНЬГИ
 spawn(function()
     while true do
-        if Config.autocollectmoney then
+        if moneyOn or farmOn then
             pcall(function()
-                local char = LocalPlayer.Character
-                if not char then return end
-                
-                for _, obj in pairs(Workspace:GetChildren()) do
-                    if obj.Name:lower():find("money") or obj.Name:lower():find("coin") or obj.Name:lower():find("cash") then
+                local char = player.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
+                    for _, obj in pairs(Workspace:GetChildren()) do
                         local dist = (char.HumanoidRootPart.Position - obj.Position).Magnitude
-                        if dist < 150 then
+                        if dist < 80 and (obj.Name:lower():find("money") or obj.Name:lower():find("coin") or obj.Name:lower():find("cash")) then
                             char.HumanoidRootPart.CFrame = obj.CFrame
-                            fireclickdetector(obj:FindFirstChildOfClass("ClickDetector"))
+                            if obj:FindFirstChildOfClass("ClickDetector") then
+                                fireclickdetector(obj:FindFirstChildOfClass("ClickDetector"))
+                            end
                         end
                     end
                 end
@@ -217,11 +120,5 @@ spawn(function()
     end
 end)
 
--- Авто респавн защита
-LocalPlayer.CharacterAdded:Connect(function()
-    wait(3)
-end)
-
-print("📱 Tsunami Hub MOBILE загружен!")
-print("👆 Нажми зеленую кнопку внизу справа!")
-print("🔗 @FounderScripts")
+print("🌊 Tsunami Mobile Script готов!")
+print("👆 Зеленая кнопка внизу справа = ВКЛ ФАРМ")
